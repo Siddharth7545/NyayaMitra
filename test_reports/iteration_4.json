@@ -1,0 +1,33 @@
+{
+  "summary": "Iteration 4 (Contract Templates Library + Redline Downloads) end-to-end tested. Backend: 17/17 pytest tests pass (templates list/get/generate/docx/share/public-view, redline text/from-review/upload + auth guards, modules regression). Frontend E2E via Playwright confirms: Templates sidebar link + all 12 template cards (nda-mutual, nda-oneway, employment, consultant, rental, commercial-lease, freelance-sow, mou, founder, power-of-attorney, will, assignment-ip) present, category filter + search work, modal opens with pre-filled defaults (duration_years=3, jurisdiction_city=Bengaluru), generate produced 6690-char NDA draft, DOCX download 39811 bytes (valid python-docx), share endpoint returned 12-char share_id, /share/{id} public page renders shared-title/shared-text/shared-copy without auth and unknown id shows 'not found'. Contract Review redline: download-redline-btn produced 38528-byte DOCX with all 5 required sections (Nyaya Mitra, Contract Redline, Executive Summary, Contract Text, Redline Annotations). Bulk Contracts: after 2-file bulk POST (200), expanding bulk-row-0 exposes bulk-redline-{filename} button which downloaded 38628-byte redline DOCX. All 12 sidebar nav links present.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "TemplatesLibraryPage.share()", "issue": "When navigator.clipboard.writeText() throws (e.g. non-focused document / restricted context), a misleading 'Share failed' toast is shown even though POST /api/templates/share succeeded (200) and the share link is displayed correctly in the UI. Suggest: on clipboard failure show 'Share link ready (copy manually)' instead of 'Share failed'. Verified reproducer: Playwright headless.", "selector": "[data-testid=\"template-share-btn\"]", "priority": "LOW"},
+      {"component": "TemplatesLibraryPage.copyText()", "issue": "No try/catch around navigator.clipboard.writeText — will throw uncaught if clipboard permission denied. Same for shared-copy on public page.", "selector": "[data-testid=\"template-copy-btn\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/test_reports/pytest/iter4.xml"
+  ],
+  "action_items": [
+    "(Low) In TemplatesLibraryPage.share(), move navigator.clipboard.writeText into its own try/catch and show 'Share link ready' fallback toast on clipboard failure — currently emits false-negative 'Share failed' when the actual share_id creation succeeded. Same pattern applies to copyText() and SharedTemplateView's shared-copy."
+  ],
+  "critical_code_review_comments": [
+    "server.py has grown to ~1940 lines including TEMPLATES dict (~200 lines) + redline/template endpoints. Consider extracting TEMPLATES + template routes to /app/backend/routers/templates.py and redline helpers to routers/redline.py for maintainability.",
+    "Template share endpoint stores full text server-side (unbounded size) — no length cap on body.text. Consider limiting to e.g. 200KB to prevent abuse.",
+    "Public /api/templates/share/{share_id} returns user_name — expose only if user opted in; currently it leaks the drafter's display name to anyone with the link. Confirm this is intended per spec (spec says 'user_name' is included, so OK by design).",
+    "_generate_template_text validates required fields but uses `str(inputs.get(...)).strip()` — this converts None to 'None' string safely, but if a numeric 0 was ever a valid input it would pass; low priority for current text-only fields."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration4.py (new)"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100% (all critical flows verified; only 1 low-priority UX toast bug)"},
+  "test_credentials": "Fresh users registered per run via /api/auth/register (uitest<ts>@nyaya.in / pass1234).",
+  "seed_data_creation": "None. Users/templates/shares created transiently.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 4 fully green. Run `pytest /app/backend/tests/test_iteration4.py -v` for regression (uses xdist, safe). Frontend: register via /api/auth/register, drop token into localStorage keys 'nm_token' + 'nm_user', navigate to /app/templates. Template card testid pattern is `template-{slug}` (NOT 'template-file-scanner-45' as review request typo suggested — that string is the app hostname). Bulk redline testid pattern is `bulk-redline-{filename}` after expanding `bulk-row-{index}`.",
+  "rca of the issue": "N/A - no functional bugs. Only low-priority 'Share failed' misleading toast when clipboard write fails in restricted browser context (see action_items)."
+}

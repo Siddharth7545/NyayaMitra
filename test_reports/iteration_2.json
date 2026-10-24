@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 2 tested end-to-end. Backend: 26/26 new pytest tests passed (file uploads for /analyze/document/upload + /review/contract/upload with DOCX/TXT + unsupported/short-text/no-auth negatives; CNR /cnr/track for Delhi/Karnataka/Maharashtra + invalid short/15-char + no-auth; Lawyers list/filter-city/filter-spec-IP/combined/sort-fee_low/sort-experience/facets/get-by-id/404/consult success/404/empty-matter/no-auth). Iteration-1 regression already passing (21/21 in prior run; test file untouched). Frontend: Sidebar shows CNR Tracker + Lawyer Directory nav; dashboard 'Court Case Tracking' card routes to /app/cnr; 'Lawyer Marketplace' card routes to /app/marketplace. CNR page: invalid 3-char triggers toast 'CNR must be 16 characters'; valid DLCT010012342024 returns Delhi/2024 + deep link to services.ecourts.gov.in with target=_blank. Marketplace: 40 seeded advocates render; city=Delhi narrows to 6 cards all showing Delhi; specialisation=IP narrows to 3 IP lawyers; reset works; sort dropdown works; booking modal opens on 'book-{id}' click, matter_summary submit yields success screen with 8-char reference id. DocAnalyzer + ContractReview dropzones present with correct testids; picking a file switches the button label to 'Analyze uploaded file' and shows the clear button.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "LawyerMarketplace booking modal", "issues": ["Textarea has HTML5 'required' attribute, so an empty-matter click never fires the JS onSubmit → the intended sonner toast 'Please describe your matter' is unreachable via UI (native browser tooltip appears instead). Backend correctly returns 400 for empty matter, so functionality is fine, only the JS-toast path is dead code."]},
+      {"screen": "LawyerMarketplace results", "issues": ["Lawyer name and fee both use class 'font-display font-bold text-lg' — makes DOM-based fee scraping ambiguous. Consider a data-testid on the fee value (e.g. lawyer-fee-{id})."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/test_nyaya_mitra.py",
+    "/app/test_reports/pytest/iter2_results.xml"
+  ],
+  "action_items": [
+    "Optional: drop the HTML5 'required' on booking-matter textarea (or wire a click-side validator) so the sonner toast branch is exercised — currently only browser native validation shows.",
+    "Optional: add lawyer-fee-{id} / lawyer-rating-{id} testids for unambiguous scraping in future automated tests.",
+    "No blocking issues — all three new features work end-to-end."
+  ],
+  "critical_code_review_comments": [
+    "server.py has grown to >1200 lines with lawyer seed embedded — consider extracting LAWYER_SEED to a JSON asset and splitting routers (cnr.py, lawyers.py, uploads.py).",
+    "CNR portal reachability uses a 6s GET on every /cnr/track — acceptable but consider caching the health status for ~60s to avoid hammering services.ecourts.gov.in during load spikes.",
+    "_ensure_lawyers_seeded compares count >= len(LAWYER_SEED) and skips; if the seed list is later shortened it will not delete extras. Add versioning or a hash check.",
+    "/api/lawyers/consult stores user_email and user_name in the doc — PII duplication. Fine for a demo, but reference by user_id only in production and join at read.",
+    "extract_text_from_upload caps at 60,000 chars silently — expose the truncation flag in the response so users know.",
+    "File-upload endpoints do not enforce a max size — a 50MB malicious PDF could blow memory. Add UploadFile size guard (e.g. 10 MB) before parsing."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration2.py (new — 26 tests)"
+  ],
+  "success_rate": {"backend": "100% (26/26 new + prior 21/21 still valid)", "frontend": "100% on all iteration-2 flows (sidebar, dashboard routing, CNR valid/invalid, marketplace filter/sort/reset/booking, doc + contract dropzones)"},
+  "test_credentials": "Fresh accounts per run: iter2+<ts>@nyaya.in / pass1234 (backend), uitest+<ts>@nyaya.in / pass1234 (UI).",
+  "seed_data_creation": "Backend auto-seeds 40 lawyers on startup via _ensure_lawyers_seeded(); verified count matches.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run iteration-2 tests with `pytest /app/backend/tests/test_iteration2.py -o addopts='' -v` — the project's pytest.ini enables xdist which breaks session-registration fixtures across workers (email-already-registered on second worker). Use -o addopts='' to disable parallel, or make the auth fixture use a per-worker unique email. Backend CNR regex is `^[A-Z]{2}[A-Z0-9]{2}\\d{12}$` — court_code accepts alphanumeric. Lawyer facets and IDs are stable across restarts (seed only inserts if count < 40)."
+}

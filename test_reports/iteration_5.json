@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 5 (Regional-language drafts) tested end-to-end. Backend: 13/13 relevant pytest cases pass — GET /api/languages returns all 6 languages; POST /api/templates/translate returns Devanagari/Tamil/Telugu/Bengali/Marathi text for all 5 non-English languages with proper nouns ('ABC Tech Pvt Ltd', 'XYZ Analytics LLP', '35000', '138') preserved verbatim in every translation; English target echoes input; unsupported language → 400; text < 10 chars → 400; unauthenticated → 401. POST /api/templates/docx-from-text produces a valid python-docx-openable file (>=5KB), Content-Disposition filename includes language suffix (e.g. 'Mutual-NDA-Hindi.docx'), title paragraph is suffixed with '— Hindi' for non-English (and NOT for English). Missing text → 400. Frontend: TemplateModal shows the new lang-tabs bar with all 6 buttons (lang-english active by default, lang-hindi/tamil/telugu/bengali/marathi). Clicking lang-hindi calls /api/templates/translate exactly once and swaps template-output to Devanagari text. Switching back to lang-english and again to lang-hindi issues ZERO additional translate calls (client cache verified). Download DOCX while Hindi active hits /api/templates/docx-from-text (not /templates/nda-mutual/docx) and filename is 'nda-mutual-hindi.docx'. Share button while Hindi active POSTs to /api/templates/share.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "TemplateModal lang-tabs (active pill)", "issues": ["When lang-hindi is active, the pill has bg=var(--nm-ink) with text-white — the 'हिंदी · Hindi' label appears very hard to see in screenshots (possibly Noto Sans Devanagari not applied to the white-on-dark variant, or the chip height clips it). Text is present in the DOM (textContent='हिंदी· Hindi') so functionally OK, but the active-state contrast/rendering for Devanagari native script should be verified visually. Non-active pills render Devanagari (मराठी) fine."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5.py",
+    "/app/test_reports/pytest/iter5.xml"
+  ],
+  "action_items": [
+    "OPTIONAL/COSMETIC: Verify active lang-tab renders 'हिंदी · Hindi' clearly (font-family: 'Noto Sans Devanagari' on the .nm-chip active state; ensure the chip has enough vertical padding for Indic descenders)."
+  ],
+  "critical_code_review_comments": [
+    "server.py has grown past 2000 lines — consider splitting Templates / Translation into a router module.",
+    "SYS_TRANSLATE prompt correctly instructs verbatim preservation of proper nouns, amounts and statute names; test_translate_indic_language verifies all 5 languages keep 'ABC Tech Pvt Ltd', 'XYZ Analytics LLP', '35000' and '138' verbatim.",
+    "docx-from-text properly rejects empty/whitespace text (400) and suffixes filename with the language label; safe filename regex strips unsafe chars.",
+    "Frontend switchLang() correctly caches per language in state and skips network for cached / english; regenerate() resets translations and lang — verified by code review."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Fresh users registered per-run at trans<ts>@nyaya.in / pass1234 and uitrans<ts>@nyaya.in / pass1234.",
+  "seed_data_creation": "None (tests self-register).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Templates library route is /app/templates (App shell). Template cards use data-testid='template-<slug>' (NOT 'template-card-<slug>'). Modal input fields use 'tf-<field_key>'. Language tabs use 'lang-<code>'. Translation endpoint may take 5-15s per language — use generous (60-90s) timeouts. Client cache is state-based so it only survives while modal is open; regenerating clears it (verified in code, not in a runtime test).",
+  "rca of the issue": "N/A — no functional bugs found."
+}

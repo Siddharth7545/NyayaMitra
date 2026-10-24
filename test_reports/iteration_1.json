@@ -1,0 +1,42 @@
+{
+  "summary": "First-iteration end-to-end testing of Nyaya Mitra. Backend: 21/21 pytest tests passed (auth, modules registry with 19/9/7 category counts and 6 flagships, module spec/run, SSE chat stream + history, document analyzer, petition draft, contract review, research, fraud detect + community feed, validation errors). Frontend: Landing / Auth register+login / dashboard (35 modules, all LIVE chips, 6 flagship visual accent) / reload-persistence / logout all working. All 6 flagship pages produce real AI content: chat streams tokens live, document analyzer renders structured breakdown, petition draft (3.1k chars), contract review, research, fraud SMS scan. SmartModule dynamic pipeline verified on rti, consumer, mock-court, multilang, marketplace via /module/{slug}/spec + /module/run — result render >3k chars. Every test data-testid mentioned in the request exists and is unique.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SmartModule form", "issues": ["Form inputs lack a name attribute (only data-testid smart-field-<key>). Not a bug per se — everything works via React state — but keeps HTML-form autofill/lastpass from working. Consider adding name={f.key}."]},
+      {"screen": "Result containers (petition-result, doc-result, contract-result, smart-result, fraud-result)", "issues": ["The container div is always rendered (with placeholder). External automated tests waiting on the container testid can get a false positive; consider adding a boolean data-state='ready'|'loading'|'empty' or a dedicated child testid like petition-draft-text so tests can assert on the actual content."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_nyaya_mitra.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Optional: expose data-state on result containers or add child testids for AI-produced content so E2E tests can distinguish 'placeholder' vs 'result'.",
+    "Optional: add name attribute mirroring f.key on SmartModule inputs for browser autofill semantics.",
+    "None of these block release — all functional flows work end-to-end."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 842 lines — 21 MODULE_SPECS + 6 flagship handlers all in one file. Consider splitting into routers/ (auth.py, modules.py, chat.py, fraud.py) once feature-set stabilises.",
+    "chat_stream endpoint persists the assistant message even on stream error (log.exception path) — the empty '' content is stored. Consider skipping insert when full is empty or storing error metadata.",
+    "extract_json falls back to {'raw': text}; several downstream UI panels handle this but a couple (petition, chat) don't need it since they consume plain text — this is fine.",
+    "fraud/community endpoint is fully public and leaks up to 120 chars of arbitrary user submitted content. Fine for a demo but sanitise / rate-limit in production.",
+    "Password bcrypt round count is default (12) — good. JWT_EXP_DAYS = 7 is reasonable.",
+    "MongoDB _id is properly excluded in all find() projections — good.",
+    "CORS is wildcard '*' — expected for a demo. Restrict in production.",
+    "No rate-limiting on any endpoint including LLM-backed ones — cost-abuse risk.",
+    "AppShell sidebar only lists 6 flagship modules; users must go back to /app to reach the other 29. Acceptable UX; could add a search or 'All modules' link."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_nyaya_mitra.py (new)",
+    "/app/memory/test_credentials.md (unchanged — fresh accounts created on the fly)"
+  ],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% on all critical flows (landing, auth, dashboard, all 6 flagships, 4 SmartModule slugs, community feed, logout, persistence)"},
+  "test_credentials": "Backend tests create fresh user each run (test+<ts>@nyaya.in / pass1234). UI tests likewise. No admin/seed account needed.",
+  "seed_data_creation": "None; users self-register on demand.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Full pytest at /app/backend/tests/test_nyaya_mitra.py (uses REACT_APP_BACKEND_URL from env or /app/frontend/.env). Junit at /app/test_reports/pytest/pytest_results.xml. Key gotchas for UI E2E: (1) petition-case-type is a <select> — use page.select_option; (2) all *-result containers are always mounted with placeholder text — assert on child content (e.g. petition-result pre) or wait_for_function on innerText length; (3) SmartModule form inputs are testid'd smart-field-<key>, not name=<key>. Fraud community feed accumulates suspicious/dangerous scans — visible even without login."
+}

@@ -1,0 +1,26 @@
+{
+  "summary": "Iteration 6 bug-fix verified end-to-end. Backend: 11 pytest tests passed, 1 skipped (chatbot slug not a module — expected), 0 failed. Voice module (slug='voice') now returns ALL text fields (answer, every key_points element, next_action, disclaimer) in the requested language script for Hindi (Devanagari), Tamil (U+0B80-U+0BFF), Telugu (U+0C00-U+0C7F), Bengali (U+0980-U+09FF), and Marathi (Devanagari) — programmatically verified via Unicode-block ratio checks. result.section_labels is a dict with keys {answer, key_points, next_action, disclaimer, read_aloud} each localized to the target script. English case returns natural English labels (no Devanagari). Multi-Language module (slug='multilang') for Hindi and Tamil returns translation, plain_language_summary, and every cultural_notes element in target script; key_terms_glossary elements have 'english' in English and 'translated'+'meaning' in target script; section_labels dict present with all 4 keys localized. Regressions: /api/module/{voice,multilang}/spec return correct fields; /api/templates/translate still preserves proper nouns (ABC Tech Pvt Ltd, XYZ Analytics LLP, 35000, 138) in Hindi. Frontend: Voice page /app/voice — switching the voice-lang dropdown to hi-IN/ta-IN/te-IN/bn-IN/mr-IN immediately localizes voice-submit-btn text (पूछें / கேளுங்கள் / అడగండి / জিজ্ঞাসা করুন / विचारा), the transcript placeholder, and section labels. Submitting a Hindi question renders the result panel with Hindi section headers taken from result.section_labels (उत्तर, मुख्य बिंदु, अगली कार्रवाई, सुनें, अस्वीकरण) — NO English 'Answer'/'Key points'/'Next action' anywhere. Multi-Language page /app/module/multilang with target_language=Hindi renders Hindi section headers (कानूनी अनुवाद, सरल भाषा में सारांश, मुख्य शब्दावली, सांस्कृतिक और कानूनी संदर्भ) instead of humanized English keys; the section_labels object is NOT rendered as a stray field.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration6.py",
+    "/app/test_reports/pytest/iter6.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is now ~2045 lines; splitting MODULE_SPECS and /api/module/* handlers into a dedicated modules router would improve maintainability (already noted in iteration 5).",
+    "MODULE_SPECS['voice'] and MODULE_SPECS['multilang'] system prompts now correctly demand full-language output + section_labels. Prompt is explicit that proper nouns may stay original script — good.",
+    "SmartModule ResultView correctly skips the 'section_labels' key from being rendered as a field and uses it as label overrides — verified in code and runtime.",
+    "VoiceAssistantPage UI_STRINGS map is compact and covers all 6 languages; result panel prefers result.section_labels with a graceful UI_STRINGS fallback."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration6.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Fresh users registered per-run: iter6+<ts>@nyaya.in / pass1234 (backend), uiv6+<ts>@nyaya.in and uimulti3+<ts>@nyaya.in (frontend).",
+  "seed_data_creation": "None — tests self-register via /api/auth/register.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Voice module page: /app/voice. Multi-Language module page: /app/module/multilang (SmartModule shell). Voice testids: voice-lang, voice-transcript, voice-submit-btn, voice-result, voice-play-btn. SmartModule testids: smart-form, smart-submit-btn, smart-result, smart-field-<key>. When waiting for smart-result, poll until inner HTML no longer contains 'thinking about' — the loading placeholder shares the same data-testid as the final result panel. To assert language correctness, use Unicode-block regexes: Devanagari [\\u0900-\\u097F], Tamil [\\u0B80-\\u0BFF], Telugu [\\u0C00-\\u0C7F], Bengali [\\u0980-\\u09FF] and require >=30% of alphabetic chars to belong to the script. LLM latency 5-15s per call — use 90-120s Playwright waits.",
+  "rca of the issue": "Original bug: system prompts for voice/multilang asked for SOME fields in requested language while keeping OTHER fields (notably key_points and read-aloud labels) in English 'for reference', producing mixed-language output. Frontend also hardcoded English labels ('Answer','Key points','Next action') for the result panel regardless of language. Fix (already applied by main agent): (1) rewrote both system prompts to demand every field in the target language + a new 'section_labels' object with localized headers; (2) VoiceAssistantPage introduced UI_STRINGS for 6 languages and reads result.section_labels for headers; (3) SmartModule ResultView reads result.section_labels as label overrides and skips rendering it as a section. Verified via 12 pytest cases (5 non-English voice + English voice + 2 multilang + 4 regressions) and 2 UI flows."
+}

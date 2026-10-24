@@ -1,0 +1,104 @@
+{
+  "theme": "light",
+  "archetype": "Swiss & High-Contrast (Indian Editorial Variant)",
+  "color_palette": {
+    "background": "#FAFAFA",
+    "surface": "#FFFFFF",
+    "primary": "#E65100",
+    "primary_hover": "#BF360C",
+    "secondary": "#1E3A8A",
+    "text_primary": "#0F172A",
+    "text_secondary": "#475569",
+    "border": "#E2E8F0",
+    "error": "#DC2626",
+    "success": "#16A34A"
+  },
+  "typography": {
+    "fonts": {
+      "heading": "'Cabinet Grotesk', sans-serif",
+      "body": "'IBM Plex Sans', sans-serif",
+      "import_urls": [
+        "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,900&display=swap",
+        "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      ]
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-[#0F172A]",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight text-[#0F172A]",
+      "h3": "text-xl md:text-2xl font-bold tracking-tight text-[#0F172A]",
+      "h4": "text-lg md:text-xl font-semibold tracking-tight text-[#0F172A]",
+      "body": "text-base leading-relaxed text-[#475569]",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em] text-[#E65100]"
+    }
+  },
+  "layout": {
+    "spacing_scale": "p-4, p-6, p-8, p-12, p-16",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "grid_strategy": "Control Room Grid (Dense) for the 35 modules. grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.",
+    "alignment": "Left-aligned content for readability, strict optical alignment."
+  },
+  "components": {
+    "buttons": "Flat, sharp corners (rounded-none), high contrast. Primary: bg-[#E65100] text-white hover:bg-[#BF360C] transition-colors. Secondary: border border-[#0F172A] text-[#0F172A] hover:bg-slate-100.",
+    "cards": "Cardless/Flat aesthetic. 1px solid border (#E2E8F0), white background, rounded-none. Internal padding p-6. Hover: -translate-y-1, border-[#0F172A], shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] for a slight neo-brutalist/editorial edge.",
+    "inputs": "Shadcn defaults overridden to rounded-none, 1px border. Focus ring: ring-2 ring-[#E65100] ring-offset-1.",
+    "navigation": "Sticky, Solid white background or Glassmorphism (bg-white/80 backdrop-blur-xl) with 1px bottom border border-border/40."
+  },
+  "dashboard_spec": {
+    "overview": "Unified Dashboard displaying 35 module cards divided into 3 distinct sections.",
+    "categories": [
+      {
+        "name": "Core Legal Services",
+        "count": 19
+      },
+      {
+        "name": "Advanced AI Features",
+        "count": 9
+      },
+      {
+        "name": "AI Scam & Fraud Detection",
+        "count": 7
+      }
+    ],
+    "flagship_modules": [
+      "AI Legal Chatbot",
+      "Document Analyzer",
+      "Petition Drafting",
+      "Contract Review",
+      "Fraud/Scam Detection",
+      "Legal Research Search Engine"
+    ],
+    "flagship_treatment": "Make these 6 modules stand out by applying col-span-2 on large screens, a distinct background color (e.g., very pale ochre or slate-50), and larger typography/icons. They should serve as the primary entry points."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "category": "hero_abstract",
+        "url": "https://images.pexels.com/photos/36984938/pexels-photo-36984938.jpeg",
+        "description": "Architectural/historical frieze, good for an authoritative legal hero section if heavily tinted or used as a subtle background pattern."
+      }
+    ]
+  },
+  "icons": {
+    "library": "lucide-react",
+    "style": "Stroke width 1.5 or 2. Sharp, uncluttered."
+  },
+  "motion": {
+    "hover": "Crisp, fast transitions. duration-200 ease-out.",
+    "page_load": "Staggered fade-in for dashboard grids to make data loading feel systematic."
+  },
+  "accessibility": {
+    "contrast": "Strict adherence to high contrast. Text on primary color must be pure white.",
+    "focus": "Visible focus states on all interactables, using ring-[#E65100]."
+  },
+  "instructions_to_main_agent": [
+    "Inject the provided Google/Fontshare font URLs into the global CSS or index.html.",
+    "Apply 'Cabinet Grotesk' to all headings and 'IBM Plex Sans' to body.",
+    "Ensure all interactive elements have data-testid attributes (e.g., data-testid='chat-submit-btn').",
+    "Build the dashboard using a standard Tailwind CSS grid, breaking it into 3 clear sections for the categories.",
+    "Implement the 6 flagship modules with deeper logic as requested, using placeholder UI or actual logic (Forms, Chat UI, Analysis Results) for their respective pages/modals.",
+    "Avoid generic border-radius. Enforce rounded-none or rounded-sm to maintain the editorial/legal authority aesthetic.",
+    "Use the Saffron (#E65100) sparingly as a strict accent for primary CTAs and active states.",
+    "Do NOT use HTML-based components for advanced user interactions (dropdown, calendar, toast). Use shadcn variants.",
+    "Provide design guidelines for .js files, not .tsx."
+  ]
+}
